@@ -21,17 +21,17 @@
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum by (le) (rate(vllm:time_to_first_token_seconds_bucket[$__rate_interval])))",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(vllm_time_to_first_token_seconds_bucket[$__rate_interval])))",
           "legendFormat": "p50",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(vllm:time_to_first_token_seconds_bucket[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(vllm_time_to_first_token_seconds_bucket[$__rate_interval])))",
           "legendFormat": "p95",
           "refId": "B"
         },
         {
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(vllm:time_to_first_token_seconds_bucket[$__rate_interval])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(vllm_time_to_first_token_seconds_bucket[$__rate_interval])))",
           "legendFormat": "p99",
           "refId": "C"
         }
@@ -56,17 +56,17 @@
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum by (le) (rate(vllm:e2e_request_latency_seconds_bucket[$__rate_interval])))",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(vllm_e2e_request_latency_seconds_bucket[$__rate_interval])))",
           "legendFormat": "p50",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(vllm:e2e_request_latency_seconds_bucket[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(vllm_e2e_request_latency_seconds_bucket[$__rate_interval])))",
           "legendFormat": "p95",
           "refId": "B"
         },
         {
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(vllm:e2e_request_latency_seconds_bucket[$__rate_interval])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(vllm_e2e_request_latency_seconds_bucket[$__rate_interval])))",
           "legendFormat": "p99",
           "refId": "C"
         }
@@ -91,12 +91,12 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(vllm:generation_tokens_total[$__rate_interval]))",
+          "expr": "sum(rate(vllm_generation_tokens_total[$__rate_interval]))",
           "legendFormat": "generation tok/s",
           "refId": "A"
         },
         {
-          "expr": "sum(rate(vllm:prompt_tokens_total[$__rate_interval]))",
+          "expr": "sum(rate(vllm_prompt_tokens_total[$__rate_interval]))",
           "legendFormat": "prompt tok/s",
           "refId": "B"
         }
@@ -121,7 +121,7 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(vllm:request_success_total[$__rate_interval]))",
+          "expr": "sum(rate(vllm_request_success_total[$__rate_interval]))",
           "legendFormat": "successful req/s",
           "refId": "A"
         }
@@ -146,12 +146,12 @@
       },
       "targets": [
         {
-          "expr": "vllm:num_requests_running",
+          "expr": "vllm_num_requests_running",
           "legendFormat": "running",
           "refId": "A"
         },
         {
-          "expr": "vllm:num_requests_waiting",
+          "expr": "vllm_num_requests_waiting",
           "legendFormat": "waiting (queued)",
           "refId": "B"
         }
@@ -178,7 +178,7 @@
       },
       "targets": [
         {
-          "expr": "vllm:gpu_cache_usage_perc * 100",
+          "expr": "vllm_gpu_cache_usage_perc * 100",
           "legendFormat": "KV cache usage %",
           "refId": "A"
         }

@@ -105,8 +105,17 @@ Client-side numbers include network RTT; judge latency targets on the
 
 ## Results
 
-_Measured on 1× RTX 4090, vLLM 0.7.3, Qwen2.5-Coder-3B FP8 — see
-[benchmark_card/BENCHMARK_CARD.md](benchmark_card/BENCHMARK_CARD.md)._
+Measured on 1× RTX 4090, vLLM 0.7.3, Qwen2.5-Coder-3B FP8 (full card:
+[benchmark_card/BENCHMARK_CARD.md](benchmark_card/BENCHMARK_CARD.md)):
+
+- **FIM autocomplete TTFT p50: 14–21 ms** across concurrency 8→64 — vs. the
+  80 ms Deliverable-1 target (4–5× headroom). Zero errors over 25,000+ requests.
+- **Throughput** up to **107 req/s / 2,409 output tok/s** on a single 4090
+  (≈ **$0.08 / 1M output tokens**).
+- **LoRA hot-swap in 0.77 s, zero restart**; eval gate blocks adapters that
+  don't beat base (measured base 0% → adapter 100% on a held-out FIM eval).
+
+![Grafana under load](benchmark_card/assets/01_grafana_under_load.png)
 
 ## Repo layout
 

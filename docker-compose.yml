@@ -15,7 +15,7 @@ name: qwen-coder-slm-stack
 
 services:
   litellm:
-    image: ghcr.io/berriai/litellm:main-v1.61.20
+    image: ghcr.io/berriai/litellm:main-latest
     container_name: litellm
     ports:
       - "4000:4000"

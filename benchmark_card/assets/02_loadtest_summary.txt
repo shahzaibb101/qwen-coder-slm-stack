@@ -1,0 +1,12 @@
+FIM autocomplete load test — Qwen2.5-Coder-3B (FP8 + ngram speculative decoding)
+1x RTX 4090 24GB · vLLM 0.7.3 · measured on the pod (localhost, no WAN)
+
+  concurrency   req/s     out tok/s    TTFT p50   TTFT p95   TTFT p99   e2e p50   e2e p99   errors
+  ----------------------------------------------------------------------------------------------------
+   8             35.2      780.5        14.2 ms    14.9 ms    20.2 ms    257 ms    350 ms    0
+   32            82.5      1839.8       15.9 ms    18.5 ms    23.5 ms    440 ms    678 ms    0
+   64            107.5     2409.2       20.6 ms    29.3 ms    47.2 ms    660 ms   1017 ms    0
+
+  Target from job spec (Deliverable 1): FIM p50 first-token < 80 ms  -->  met with ~4-5x headroom
+  ngram speculative-decode draft acceptance: 38%
+  25,000+ requests served across all runs, zero errors

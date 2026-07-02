@@ -15,7 +15,10 @@ MODE="${1:-lora}"
 MODEL_ID="${MODEL_ID:-Qwen/Qwen2.5-Coder-3B}"
 
 echo "==> Installing vLLM 0.7.3 (mode: ${MODE}, model: ${MODEL_ID})"
-pip install -q "vllm==0.7.3" "hf_transfer"
+# Pin transformers: vLLM 0.7.3's tokenizer shim breaks on transformers>=5
+# (Qwen2Tokenizer.all_special_tokens_extended was removed). 4.49.x is the
+# last line vLLM 0.7.3 was released against.
+pip install -q "vllm==0.7.3" "transformers==4.49.0" "hf_transfer"
 
 echo "==> Starting GPU metrics exporter on :9835"
 nohup python scripts/gpu_metrics_exporter.py --port 9835 >gpu_exporter.log 2>&1 &

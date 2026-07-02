@@ -1,0 +1,5 @@
+$ python serving/hotswap.py --name customer-a --path .../adapters/customer-a
+unloading previous adapter 'customer-a' ... none loaded
+loading adapter 'customer-a' from .../adapters/customer-a ...
+✅ adapter 'customer-a' live in 0.77s — zero restart, in-flight traffic unaffected
+smoke test ('customer-a'): client.submit_job("sync_orders", payload=orders, queue="realtime", priority=1)
