@@ -1,0 +1,32 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  # vLLM server-side metrics (TTFT, e2e latency, tokens/sec, KV cache, queue depth).
+  # These histograms are measured inside the server, so latency panels stay honest
+  # even when load is generated over a WAN link.
+  - job_name: vllm
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - "vllm:8000" # full-stack mode (compose gpu profile)
+    # Split mode — vLLM on a remote pod. Replace the block above, e.g. RunPod proxy:
+    #   scheme: https
+    #   static_configs:
+    #     - targets: ["<pod-id>-8000.proxy.runpod.net:443"]
+    # or a direct TCP endpoint:
+    #   static_configs:
+    #     - targets: ["<pod-ip>:<mapped-port>"]
+
+  # GPU utilization / memory / power from scripts/gpu_metrics_exporter.py
+  # (runs next to vLLM on the GPU host).
+  - job_name: gpu
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - "vllm:9835"
+    # Split mode (RunPod proxy):
+    #   scheme: https
+    #   static_configs:
+    #     - targets: ["<pod-id>-9835.proxy.runpod.net:443"]

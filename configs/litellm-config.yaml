@@ -1,0 +1,27 @@
+# LiteLLM gateway config — OpenAI-compatible routes in front of vLLM.
+# Clients call http://<gateway>:4000/v1 with the friendly model names below;
+# LiteLLM forwards to the vLLM OpenAI server at VLLM_API_BASE.
+
+model_list:
+  # Base coding SLM (FIM autocomplete + completions)
+  - model_name: coder-3b
+    litellm_params:
+      model: openai/Qwen/Qwen2.5-Coder-3B
+      api_base: os.environ/VLLM_API_BASE
+      api_key: "none"
+
+  # Customer-specific LoRA adapter, hot-loaded at runtime into the same vLLM
+  # process (see serving/hotswap.py). Requests routed by adapter name.
+  - model_name: coder-3b-customer-a
+    litellm_params:
+      model: openai/customer-a
+      api_base: os.environ/VLLM_API_BASE
+      api_key: "none"
+
+litellm_settings:
+  drop_params: true
+  num_retries: 1
+  request_timeout: 120
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY

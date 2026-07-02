@@ -1,0 +1,132 @@
+name: qwen-coder-slm-stack
+
+# Two ways to run:
+#
+#   1. Split mode (default) — vLLM runs on a remote GPU pod (see scripts/pod_setup.sh),
+#      gateway + observability run here:
+#        cp .env.example .env   # point VLLM_API_BASE at the pod
+#        docker compose up -d
+#
+#   2. Full-stack mode — on a GPU VM (Lambda, AWS g5/g6e, Vast VM), run everything:
+#        docker compose --profile gpu-lora up -d     # LoRA hot-swap serving
+#        docker compose --profile gpu-perf up -d     # FP8 + ngram speculative decoding
+#      (the two vLLM profiles are mutually exclusive — vLLM 0.7 cannot combine
+#       LoRA with speculative decoding; see RUNBOOK.md "Known constraints")
+
+services:
+  litellm:
+    image: ghcr.io/berriai/litellm:main-v1.61.20
+    container_name: litellm
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./configs/litellm-config.yaml:/app/config.yaml:ro
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+    environment:
+      - VLLM_API_BASE=${VLLM_API_BASE:-http://vllm:8000/v1}
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY:-sk-demo-1234}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prom-data:/prometheus
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+    volumes:
+      - ./configs/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./configs/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  # ---- GPU profiles (full-stack mode on a GPU VM) --------------------------
+
+  # Perf profile: FP8 weights + ngram speculative decoding + prefix caching.
+  # Matches an autocomplete-serving (FIM) production config.
+  vllm-perf:
+    profiles: ["gpu-perf"]
+    image: vllm/vllm-openai:v0.7.3
+    container_name: vllm
+    ports:
+      - "8000:8000"
+    ipc: host
+    environment:
+      - VLLM_USE_V1=0 # ngram spec decode + runtime LoRA need the v0 engine in 0.7.x
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN:-}
+    volumes:
+      - hf-cache:/root/.cache/huggingface
+    command: >
+      --model ${MODEL_ID:-Qwen/Qwen2.5-Coder-3B}
+      --quantization fp8
+      --max-model-len 4096
+      --gpu-memory-utilization 0.90
+      --enable-prefix-caching
+      --speculative-model "[ngram]"
+      --num-speculative-tokens 5
+      --ngram-prompt-lookup-max 4
+      --disable-log-requests
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  # LoRA profile: runtime adapter loading enabled for zero-restart hot-swap.
+  vllm-lora:
+    profiles: ["gpu-lora"]
+    image: vllm/vllm-openai:v0.7.3
+    container_name: vllm
+    ports:
+      - "8000:8000"
+    ipc: host
+    environment:
+      - VLLM_USE_V1=0
+      - VLLM_ALLOW_RUNTIME_LORA_UPDATING=True
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN:-}
+    volumes:
+      - hf-cache:/root/.cache/huggingface
+      - ./adapters:/adapters:ro
+    command: >
+      --model ${MODEL_ID:-Qwen/Qwen2.5-Coder-3B}
+      --quantization fp8
+      --max-model-len 4096
+      --gpu-memory-utilization 0.90
+      --enable-prefix-caching
+      --enable-lora
+      --max-lora-rank 32
+      --max-loras 4
+      --disable-log-requests
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+
+volumes:
+  prom-data:
+  hf-cache:

@@ -1,0 +1,16 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# training + serving artifacts
+adapters/
+training/data/
+evals/data/
+loadtest/results/
+*_checkpoints/
+*.log
+
+# local junk
+.DS_Store
